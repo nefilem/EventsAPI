@@ -8,6 +8,8 @@ const createError = require('http-errors');
  * @param  {} res
  */
 exports.index = async function (req,res) {
+
+    // return all data from mongodb
     EventsDB.find()
      .then( (eventsdbitem) => res.send(eventsdbitem));
 }
@@ -18,6 +20,8 @@ exports.index = async function (req,res) {
  * @param  {} res
  */
 exports.show = async function (req,res) {
+
+    // find and return data for given ID
     EventsDB.find({_id: ObjectId(req.params.id)})
      .then( (eventsdbitem) => res.send(eventsdbitem));
 }
@@ -31,6 +35,8 @@ exports.show = async function (req,res) {
  * @param  {} next
  */
 exports.delete = function(req,res,next){
+
+      // delete the data for given id
       EventsDB.deleteOne({_id: ObjectId(req.params.id)})
         .then( (result) => {
             if(result.deletedCount){
@@ -51,21 +57,28 @@ exports.delete = function(req,res,next){
   * @param  {} next
   */
  exports.update = async function(req,res,next){
+
+    // check for missing data
     let missingInfo = [];
     if(!req.body.name){        
         missingInfo.push("Event name");
     }
 
+    // check for missing data
     if(!req.body.location){
         missingInfo.push("Location");
     }
 
+    // any data missing then return an error and exit function
     if (missingInfo.length>0) {
         let errorMsg = "";
         if (missingInfo.length = 1) { errorMsg = " is a required input."; } else { errorMsg = " are required inputs."; }
         return (next(createError(400, missingInfo.join(" and ") + errorMsg)));
     }
     
+    //get data for the given ID from the database then modify the
+    //data ready to save back to mongodb.
+    console.log("Writing to ID: " + req.params.id);
     EventsDB.findOne({_id: ObjectId(req.params.id)})
     .then( (Event) => {
         if(!Event){
@@ -77,6 +90,7 @@ exports.delete = function(req,res,next){
         Event.datetime = req.body.datetime;
         Event.creator = req.body.creator;
 
+        // save the data back to mongodb
         Event.save()
             .then( () => res.send({result: true}))
     });
@@ -95,21 +109,25 @@ exports.create = async function (req,res,next){
 
 console.log("here");
 
+    // check for missing data
     let missingInfo = [];
     if(!req.body.name){
         missingInfo.push("Event name");
     }
 
+    // check for missing data
     if(!req.body.location){
         missingInfo.push("Location");
     }
 
+    //if any data was missing then return with error message
     if (missingInfo.length>0) {
         let errorMsg = "";
         if (missingInfo.length = 1) { errorMsg = " is a required input."; } else { errorMsg = " are required inputs."; }
         return (next(createError(400, missingInfo.join(" and ") + errorMsg)));
     }
      
+    //setup object to save back to mongodb database
     const event = new EventsDB({
             name: req.body.name,
             location: req.body.location,
@@ -118,6 +136,7 @@ console.log("here");
             creator: req.body.creator
     });
 
+    //save the data back to mongodb
     event.save()
     .then((response) => {
         console.log(response);
@@ -138,6 +157,8 @@ exports.search = async function (req,res) {
 
     let filter = undefined;
 
+    // setup the filter based on the field and value given, all string
+    // fields have regex to allow for partial matching.
     switch (req.params.field) {
         case "precis":
             filter = {precis: { "$regex": String(req.params.value), "$options": "i" } };
@@ -159,6 +180,7 @@ exports.search = async function (req,res) {
             break
     }
     
+    //do a find using the filter setup in the previous chunk of code
     EventsDB.find(filter)
     .then((eventsdbitem) => { console.log(eventsdbitem); res.send(eventsdbitem); });
 }
@@ -171,9 +193,9 @@ exports.search = async function (req,res) {
  */
 exports.deleteAll = function(req,res,next){
     console.log("uhoh delete all");
-    EventsDB.deleteMany({ _id: { $ne: "" }})
-      .then( (result) => {
-          console.log(result);
+    // Delete everything that has an ID (nothing should have a blank id).
+    EventsDB.deleteMany({})
+      .then( (result) => {          
           if(result.deletedCount){
               res.send({result:true});
           }
@@ -188,7 +210,9 @@ exports.deleteAll = function(req,res,next){
  * @param  {} req
  * @param  {} res
  */
-exports.getRandomEvents = async function(req, res) {    
+exports.getRandomEvents = async function(req, res) {  
+        // return list of all records, then randomly sort it and finally 
+        // take the top 3 to return.
         EventsDB.find({})
          .then( (eventsdbitem) => {
              const shuffledArray = eventsdbitem.sort(() => 0.5 - Math.random());
