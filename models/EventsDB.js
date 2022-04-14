@@ -5,13 +5,8 @@ const EventsDBSchema = mongoose.Schema({
     location: String,
     precis: String,
     datetime: String,
-    creator: Number
-    // isbn13: String,
-    // bookname: String,
-    // authorsname: String,
-    // read: Boolean,
-    // returned: Boolean,
-    // imagelink: String
+    creator: String
+   
 })
 
 module.exports.EventsDB = mongoose.model('Events', EventsDBSchema, 'Events');

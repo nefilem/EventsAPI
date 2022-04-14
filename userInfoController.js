@@ -34,12 +34,15 @@ exports.login = async function(req, res, next) {
     const sUsername = req.body.username;
     const sPassword = req.body.password;
 
+    console.log("logging in :", sUsername, sPassword);
+
     let matchStatus = undefined;
 
-    userInfo.findOne({ username: sUsername })
+    await userInfo.findOne({ username: sUsername })
     .then(async (response) => {
         matchStatus = await bcrypt.compare(sPassword, response.hashedPw);
         if (matchStatus===true) {
+            console.log("Successfully logged in:", response);
             res.send({result:true, loggedIn:true});
         } else {
             res.send({result:true, loggedIn:false});
