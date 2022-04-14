@@ -13,7 +13,12 @@ const userInfoSchema = mongoose.Schema({
     dateCreated: {
         type: Date,
         default: Date.now
+    },
+    adminUser: {
+        type: Boolean,
+        default: false
     }
+
 });
 
 module.exports.userInfo = mongoose.model('userInfo', userInfoSchema, 'userInfo');

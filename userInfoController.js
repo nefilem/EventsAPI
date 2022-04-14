@@ -8,14 +8,15 @@ exports.register = async function(req, res, next) {
     const sUsername = req.body.username;
     //const password = req.body.password;
     const sHashedPw = await bcrypt.hash(req.body.password, 12);
-
+    const sAdminUser = (req.body.adminUser === undefined || req.body.adminUser === null || req.adminUser === false)?false:true;
 
     console.log("hashedPw", sHashedPw);
 
      //setup object to save back to mongodb database
     const user = new userInfo({
             username: sUsername,
-            hashedPw: sHashedPw
+            hashedPw: sHashedPw,
+            adminUser: sAdminUser
     });
 
     //save the data back to mongodb
@@ -43,9 +44,9 @@ exports.login = async function(req, res, next) {
         matchStatus = await bcrypt.compare(sPassword, response.hashedPw);
         if (matchStatus===true) {
             console.log("Successfully logged in:", response);
-            res.send({result:true, loggedIn:true});
+            res.send({result:true, loggedIn:true, adminUser: Boolean(response.adminUser)});
         } else {
-            res.send({result:true, loggedIn:false});
+            res.send({result:true, loggedIn:false, adminUser: false});
         }
     })
     .catch((response) => {
